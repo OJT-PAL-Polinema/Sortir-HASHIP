@@ -2,137 +2,85 @@
 
 namespace App\Console\Commands;
 
+use App\Models\ProcessingResult;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
 use Exception;
+use Illuminate\Support\Facades\Log;
 
 class CsvProcessorCommand extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * 'file' is a required argument for the CSV path.
-     * --unique: Optional flag to specify a column for duplicate checking.
-     * --validate-ip: Optional flag to specify a column to validate as an IP address.
-     * --validate-hash: Optional flag to specify a column to validate as a hash (MD5, SHA1, SHA256).
-     *
-     * @var string
-     */
-    protected $signature = 'csv:process {file}
-                            {--unique= :The column name to check for duplicates}
-                            {--validate-ip= :The column to validate as an IP address}
-                            {--validate-hash= :The column to validate as a hash (MD5, SHA1, SHA256)}';
+    protected $signature = 'csv:process {file} {original_filename} {--type=}';
+    protected $description = 'Processes a CSV file based on a specific logic type (ip or hash) and saves results to the DB.';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'A robust command to process a CSV file with validation and duplicate checking';
-
-    /**
-     * Execute the console command.
-     */
     public function handle()
     {
-        try {
-            // --- 1. RETRIEVE AND VALIDATE INPUTS ---
-            $filePath = $this->argument('file');
-            $uniqueColumn = $this->option('unique');
-            $ipColumn = $this->option('validate-ip');
-            $hashColumn = $this->option('validate-hash');
+        $filePath = $this->argument('file');
+        $originalFilename = $this->argument('original_filename');
+        $processingType = $this->option('type'); // 'ip' or 'hash'
 
-            if (!file_exists($filePath)) {
-                $this->error("File does not exist at path: {$filePath}");
-                return 1; // Indicate failure
-            }
-
-            // --- 2. OPEN FILE AND READ HEADERS ---
-            $fileHandle = fopen($filePath, 'r');
-            if ($fileHandle === false) {
-                $this->error("Unable to open the file: {$filePath}");
-                return 1;
-            }
-
-            $headers = fgetcsv($fileHandle);
-            if ($headers === false) {
-                $this->error("Could not read CSV headers. The file might be empty or corrupted.");
-                fclose($fileHandle);
-                return 1;
-            }
-
-            // --- 3. INITIALIZE COUNTERS AND TRACKERS ---
-            $this->info("Starting CSV processing for: " . basename($filePath));
-            $counters = [
-                'processed' => 0,
-                'duplicates' => 0,
-                'invalid_ip' => 0,
-                'invalid_hash' => 0,
-            ];
-            $uniqueValues = []; // Used to track values for duplicate checking
-            $rowCount = 1;      // Start at 1 to account for the header row
-
-            // --- 4. PROCESS FILE ROW BY ROW ---
-            while (($row = fgetcsv($fileHandle)) !== false) {
-                $rowCount++;
-                // Create an associative array (header => value) for the current row
-                $data = array_combine($headers, $row);
-
-                // --- VALIDATION PIPELINE ---
-
-                // A. IP Address Validation
-                if ($ipColumn && filter_var($data[$ipColumn] ?? '', FILTER_VALIDATE_IP) === false) {
-                    $this->warn("Skipping row {$rowCount}: Invalid IP '{$data[$ipColumn]}' in column '{$ipColumn}'.");
-                    $counters['invalid_ip']++;
-                    continue; // Skip to the next row
-                }
-
-                // B. Hash Format Validation (MD5, SHA1, SHA256)
-                if ($hashColumn && !preg_match('/^([a-f0-9]{32}|[a-f0-9]{40}|[a-f0-9]{64})$/i', $data[$hashColumn] ?? '')) {
-                    $this->warn("Skipping row {$rowCount}: Invalid hash format in column '{$hashColumn}'.");
-                    $counters['invalid_hash']++;
-                    continue; // Skip to the next row
-                }
-
-                // C. Duplicate Entry Validation
-                if ($uniqueColumn) {
-                    $value = $data[$uniqueColumn] ?? null;
-                    if (isset($uniqueValues[$value])) {
-                        $this->warn("Skipping row {$rowCount}: Duplicate value '{$value}' in column '{$uniqueColumn}'.");
-                        $counters['duplicates']++;
-                        continue; // Skip to the next row
-                    }
-                    $uniqueValues[$value] = true; // Mark this value as seen
-                }
-
-                // --- 5. PROCESS THE VALID DATA ---
-                // If the row passes all validations, it reaches this point.
-                // Replace this line with your actual business logic (e.g., save to database).
-                // For this example, we'll just output the data.
-                $this->line("Processing row {$rowCount}: " . json_encode($data));
-                $counters['processed']++;
-
-            } // End of while loop
-
-            fclose($fileHandle);
-
-            // --- 6. DISPLAY FINAL SUMMARY ---
-            $this->info(PHP_EOL . '--------------------');
-            $this->info('  Processing Complete!');
-            $this->info('--------------------');
-            $this->info("Total Records Processed: {$counters['processed']}");
-            $this->warn("Skipped Duplicate Records: {$counters['duplicates']}");
-            $this->warn("Skipped Invalid IP Records: {$counters['invalid_ip']}");
-            $this->warn("Skipped Invalid Hash Records: {$counters['invalid_hash']}");
-            $this->info('--------------------');
-
-            return 0; // Indicate success
-
-        } catch (Exception $e) {
-            // Catch any unexpected errors during processing
-            $this->error("An unexpected error occurred: " . $e->getMessage());
-            Log::error("CSV Processing Failed: " . $e); // Log the full error
-            return 1; // Indicate failure
+        if (!in_array($processingType, ['ip', 'hash'])) {
+            $this->error("Invalid processing type specified. Must be 'ip' or 'hash'.");
+            return 1;
         }
+
+        $this->info("Starting {$processingType} processing for: {$originalFilename}");
+
+        $fileHandle = fopen(storage_path('app/' . $filePath), 'r');
+        $headers = fgetcsv($fileHandle);
+        $rowCount = 1;
+        $uniqueValues = [];
+
+        while (($row = fgetcsv($fileHandle)) !== false) {
+            $rowCount++;
+            $data = array_combine($headers, $row);
+
+            $status = 'processed';
+            $message = null;
+
+            // --- SPLIT LOGIC ---
+            switch ($processingType) {
+                case 'ip':
+                    $ipColumn = 'source_ip'; // IMPORTANT: Change to your IP column name
+                    $uniqueColumn = 'source_ip';
+                    if (filter_var($data[$ipColumn] ?? '', FILTER_VALIDATE_IP) === false) {
+                        $status = 'failed_invalid';
+                        $message = "Invalid IP address: " . ($data[$ipColumn] ?? 'NULL');
+                    }
+                    break;
+                
+                case 'hash':
+                    $hashColumn = 'file_hash'; // IMPORTANT: Change to your hash column name
+                    $uniqueColumn = 'file_hash';
+                    if (!preg_match('/^([a-f0-9]{32}|[a-f0-9]{40}|[a-f0-9]{64})$/i', $data[$hashColumn] ?? '')) {
+                        $status = 'failed_invalid';
+                        $message = "Invalid hash format.";
+                    }
+                    break;
+            }
+
+            // Check for duplicates if the row is still valid
+            if ($status === 'processed') {
+                $value = $data[$uniqueColumn] ?? null;
+                if (isset($uniqueValues[$value])) {
+                    $status = 'failed_duplicate';
+                    $message = "Duplicate value: {$value}";
+                }
+                $uniqueValues[$value] = true;
+            }
+
+            // Save the result of this row to the database
+            ProcessingResult::create([
+                'processing_type' => $processingType,
+                'original_filename' => $originalFilename,
+                'row_number' => $rowCount,
+                'data' => $data,
+                'status' => $status,
+                'message' => $message,
+            ]);
+        }
+        
+        fclose($fileHandle);
+        $this->info("Finished processing {$originalFilename}. Results saved to database.");
+        return 0;
     }
 }

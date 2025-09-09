@@ -15,32 +15,26 @@ class ProcessUploadedCsv implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $filePath;
+    protected $originalFilename;
+    protected $processingType;
 
-    /**
-     * Create a new job instance.
-     *
-     * @param string $filePath The path to the CSV file to be processed.
-     */
-    public function __construct(string $filePath)
+    public function __construct(string $filePath, string $originalFilename, string $processingType)
     {
         $this->filePath = $filePath;
+        $this->originalFilename = $originalFilename;
+        $this->processingType = $processingType;
     }
 
-    /**
-     * Execute the job.
-     */
     public function handle(): void
     {
-        Log::info("Job starting: Processing CSV at {$this->filePath}");
+        Log::info("Job starting for {$this->originalFilename}, type: {$this->processingType}");
 
-        // Call the Artisan command programmatically.
-        // We pass the file path and any other options your command needs.
         Artisan::call('csv:process', [
             'file' => $this->filePath,
-            '--validate-ip' => 'source_ip', // Example: Hardcode options or pass them in constructor
-            '--unique' => 'transaction_id' // Example
+            'original_filename' => $this->originalFilename,
+            '--type' => $this->processingType,
         ]);
 
-        Log::info("Job finished: " . Artisan::output());
+        Log::info("Job finished for {$this->originalFilename}. Output: " . Artisan::output());
     }
 }
