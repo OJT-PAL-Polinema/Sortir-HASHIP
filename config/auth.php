@@ -35,9 +35,17 @@ return [
     |
     */
 
+    // config/auth.php
+
     'guards' => [
         'web' => [
             'driver' => 'session',
+            'provider' => 'users',
+        ],
+
+        // Ubah atau tambahkan bagian ini
+        'api' => [
+            'driver' => 'jwt', // <-- Ganti menjadi 'jwt'
             'provider' => 'users',
         ],
     ],
