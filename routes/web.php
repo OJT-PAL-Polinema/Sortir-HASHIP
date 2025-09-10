@@ -1,24 +1,25 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ResultsController;
-use App\Http\Controllers\CsvUploadController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\WelcomeController;
+use App\Http\Controllers\DashboardController; // Kita akan pakai controller baru yang lebih sesuai
 
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+*/
 
+// Rute untuk tamu (yang belum login)
+Route::middleware('guest')->group(function () {
+    Route::get('/', [AuthController::class, 'login']);
+    Route::get('login', [AuthController::class, 'login'])->name('login');
+    Route::post('login', [AuthController::class, 'postlogin']);
+});
 
-Route::get('/', [AuthController::class, 'login']);
-Route::get('login', [AuthController::class, 'login'])->name('login');
-Route::post('login', [AuthController::class, 'postlogin']);
-Route::get('logout', [AuthController::class, 'logout'])->middleware('auth');
-
-Route::get('/home', [WelcomeController::class, 'index']);
-
-// Route to show the upload form
-Route::get('/upload-csv', [CsvUploadController::class, 'create'])->name('csv.upload.form');
-
-// Route to handle the form submission
-Route::post('/upload-csv', [CsvUploadController::class, 'store'])->name('csv.upload.store');
-Route::get('/results/ip', [ResultsController::class, 'showIpResults'])->name('results.ip');
-Route::get('/results/hash', [ResultsController::class, 'showHashResults'])->name('results.hash');
+// Rute untuk user yang SUDAH Login
+Route::middleware('auth')->group(function () {
+    Route::get('/home', [DashboardController::class, 'index'])->name('home');
+    Route::post('/upload', [DashboardController::class, 'store'])->name('upload.store');
+    Route::post('logout', [AuthController::class, 'logout'])->name('logout');
+});

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
     <style>
-        /* CSS untuk tampilan form */
+                /* CSS untuk tampilan form */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: #f4f7f6;
@@ -79,80 +79,26 @@
 <body>
 
     <div class="login-container">
-        <h2>Login Akun</h2>
-        <form action="{{ url('login') }}" method="POST" id="loginForm">
-            <div class="input-group">
+        <h2>Login</h2>
+
+        {{-- Form HTML Standar --}}
+        <form action="{{ url('login') }}" method="POST">
+            @csrf <div class="input-group">
                 <label for="username">Username</label>
-                <input type="text" id="username" name="username" required>
+                <input type="text" id="username" name="username" value="{{ old('username') }}" required>
+                
+                {{-- Tampilkan pesan error jika ada --}}
+                @error('username')
+                    <div style="color: red; font-size: 14px; margin-top: 5px;">{{ $message }}</div>
+                @enderror
             </div>
+
             <div class="input-group">
                 <label for="password">Password</label>
                 <input type="password" id="password" name="password" required>
             </div>
             <button type="submit">Login</button>
         </form>
-        <div id="error-message"></div>
     </div>
-
-    <script>
-        // --- JavaScript untuk menangani proses login ---
-
-        // 1. Ambil elemen form dan pesan error dari HTML
-        const loginForm = document.getElementById('loginForm');
-        const errorMessage = document.getElementById('error-message');
-
-        // 2. Tambahkan event listener untuk event 'submit' pada form
-        loginForm.addEventListener('submit', async function(event) {
-            // Mencegah form melakukan submit standar (refresh halaman)
-            event.preventDefault();
-
-            // Sembunyikan pesan error sebelumnya
-            errorMessage.style.display = 'none';
-
-            // 3. Ambil data dari input form
-            const formData = new FormData(loginForm);
-            const data = Object.fromEntries(formData.entries());
-
-            try {
-                // 4. Kirim data ke API menggunakan fetch
-                const response = await fetch('http://127.0.0.1:8000/api/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                // Ubah respons menjadi format JSON
-                const result = await response.json();
-
-                // 5. Cek apakah respons dari server OK (status code 200-299)
-                if (response.ok) {
-                    // Jika login berhasil:
-                    console.log('Login Berhasil:', result);
-                    
-                    // Simpan access_token ke localStorage browser
-                    localStorage.setItem('access_token', result.access_token);
-                    
-                    // Arahkan (redirect) pengguna ke halaman home
-                    window.location.href = '/home'; // Ganti '/home' jika halaman tujuan Anda berbeda
-
-                } else {
-                    // Jika login gagal (misal: status code 401 Unauthorized):
-                    throw new Error(result.error || 'Username atau password salah!');
-                }
-
-            } catch (error) {
-                // 6. Tangani jika terjadi error (gagal login atau masalah jaringan)
-                console.error('Error saat login:', error);
-                
-                // Tampilkan pesan error di halaman
-                errorMessage.textContent = error.message;
-                errorMessage.style.display = 'block';
-            }
-        });
-    </script>
-
 </body>
 </html>
