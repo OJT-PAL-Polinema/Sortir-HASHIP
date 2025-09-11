@@ -11,81 +11,108 @@ use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
-    /**
-     * Menampilkan halaman dashboard utama beserta data riwayat.
-     */
     public function index()
     {
         $logs = UploadLog::with('user')->latest()->take(10)->get();
-        return view('welcome', ['logs' => $logs]); // Pastikan nama view Anda 'welcome.blade.php'
+        return view('welcome', ['logs' => $logs]);
     }
 
-    /**
-     * Fungsi utama untuk membaca file CSV, menyimpan data tanpa duplikat.
-     */
     public function store(Request $request)
     {
-        // 1. Validasi Input dari Form
         $request->validate([
             'comment' => 'required|string|max:255',
-            'type' => 'required|in:ip,hash', // Pastikan tipenya hanya ip atau hash
-            'file' => 'required|file|mimes:csv,txt' // Pastikan file adalah CSV atau TXT
+            'type' => 'required|in:ip,hash',
+            'file' => 'required|file|mimes:csv,txt'
         ]);
 
         $file = $request->file('file');
         $type = $request->input('type');
 
-        // Gunakan Transaction untuk memastikan semua data berhasil disimpan atau tidak sama sekali
+        if (!$this->validateFileContent($file, $type)) {
+            return back()->with('error', 'Isi file tidak sesuai dengan tipe yang dipilih (IP/Hash).')->withInput();
+        }
+
+        // [PERUBAHAN] Inisialisasi variabel untuk menghitung data baru dan duplikat
+        $newEntriesCount = 0;
+        $duplicateEntriesCount = 0;
+
         DB::beginTransaction();
         try {
-            // 2. Buat catatan di tabel upload_logs terlebih dahulu
             $uploadLog = new UploadLog();
             $uploadLog->user_id = auth()->id();
             $uploadLog->comment = $request->input('comment');
             $uploadLog->data_type = $type;
             $uploadLog->save();
 
-            // 3. Buka dan baca file CSV baris per baris
             $fileHandle = fopen($file->getRealPath(), 'r');
 
-            // Loop untuk membaca setiap baris di file CSV
             while (($row = fgetcsv($fileHandle, 1000, ',')) !== false) {
-                // Asumsikan data penting ada di kolom pertama (indeks 0)
                 $value = trim($row[0]);
-                
                 if (empty($value)) {
-                    continue; // Lewati baris kosong
+                    continue;
                 }
 
                 $model = null;
 
                 if ($type === 'ip') {
-                    // 4a. Cari IP, atau buat baru jika belum ada. Ini adalah inti dari logika "tanpa duplikat".
                     $model = IpAddress::firstOrCreate(['ip_address' => $value]);
-                    // 5a. Hubungkan IP ini ke log upload melalui tabel pivot
-                    $uploadLog->ipAddresses()->syncWithoutDetaching($model->id);
-
                 } elseif ($type === 'hash') {
-                    // 4b. Cari Hash, atau buat baru jika belum ada.
                     $model = Hash::firstOrCreate(['hash_value' => $value]);
-                    // 5b. Hubungkan Hash ini ke log upload melalui tabel pivot
-                    $uploadLog->hashes()->syncWithoutDetaching($model->id);
+                }
+
+                if ($model) {
+                    // [PERUBAHAN] Cek apakah model baru saja dibuat atau sudah ada sebelumnya
+                    if ($model->wasRecentlyCreated) {
+                        $newEntriesCount++;
+                    } else {
+                        $duplicateEntriesCount++;
+                    }
+                    $uploadLog->{$type === 'ip' ? 'ipAddresses' : 'hashes'}()->syncWithoutDetaching($model->id);
                 }
             }
 
             fclose($fileHandle);
-            
-            // Jika semua berhasil, simpan perubahan ke database
             DB::commit();
+            
+            // [PERUBAHAN] Buat pesan notifikasi yang dinamis berdasarkan hasil hitungan
+            $message = "Proses selesai! {$newEntriesCount} data baru ditambahkan, {$duplicateEntriesCount} duplikat ditemukan dan diabaikan.";
 
-            return redirect()->route('home')->with('success', 'File berhasil di-upload dan diproses!');
+            // [PERUBAHAN] Kirim pesan yang sudah dinamis ke session
+            return redirect()->route('home')->with('success', $message);
 
         } catch (\Exception $e) {
-            // Jika ada error di tengah jalan, batalkan semua yang sudah dilakukan
             DB::rollBack();
-            Log::error('Upload Gagal: ' . $e->getMessage()); // Catat error untuk debugging
-
+            Log::error('Upload Gagal: ' . $e->getMessage());
             return redirect()->route('home')->with('error', 'Terjadi kesalahan saat memproses file.');
         }
+    }
+
+    private function validateFileContent($file, $expectedType): bool
+    {
+        // ... (kode validasi konten tidak berubah) ...
+        $fileHandle = fopen($file->getRealPath(), 'r');
+        $isValid = true;
+        $linesToSample = 10;
+        $linesChecked = 0;
+
+        while (($row = fgetcsv($fileHandle, 1000, ',')) !== false && $linesChecked < $linesToSample) {
+            if (!empty($row) && !empty(trim($row[0]))) {
+                $value = trim($row[0]);
+                $linesChecked++;
+                if ($expectedType === 'ip') {
+                    if (filter_var($value, FILTER_VALIDATE_IP) === false) {
+                        $isValid = false;
+                        break;
+                    }
+                } elseif ($expectedType === 'hash') {
+                    if (!ctype_xdigit($value)) {
+                        $isValid = false;
+                        break;
+                    }
+                }
+            }
+        }
+        fclose($fileHandle);
+        return $isValid;
     }
 }

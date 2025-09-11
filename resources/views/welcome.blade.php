@@ -70,23 +70,30 @@
     </style>
 </head>
 <body>
+        <header class="header">
+            <nav class="nav">
+                <a href="{{ route('home') }}" class="{{ Route::is('home') ? 'active' : '' }}">HOME</a>
+                <a href="{{ route('ips.index') }}" class="{{ Route::is('ips.index') ? 'active' : '' }}">IP</a>
+                <a href="{{ route('hashes.index') }}" class="{{ Route::is('hashes.index') ? 'active' : '' }}">HASH</a>
+            </nav>
+            <div class="user-profile">
+                @auth
+                    {{-- Bagian ini HANYA akan tampil jika user sudah login --}}
+                    <span>{{ Auth::user()->username }}</span>
+                    <form action="{{ route('logout') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="logout-btn" title="Logout">
+                            <img alt=" logout" height="20" src="{{ asset('assets/logouticon.png') }}" width="20" />
+                        </button>
+                    </form>
+                @endauth
 
-    <header class="header">
-        <nav class="nav">
-            <a href="#" class="active">HOME</a>
-            <a href="#">IP</a>
-            <a href="#">HASH</a>
-        </nav>
-        <div class="user-profile">
-            <span>{{ Auth::user()->username }}</span>
-            <form action="{{ route('logout') }}" method="POST">
-                @csrf
-                <button type="submit" class="logout-btn" title="Logout">
-                    <img alt=" logout" height="20" src="{{ asset('assets/logouticon.png') }}" width="20" />
-                </button>
-            </form>
-        </div>
-    </header>
+                @guest
+                    {{-- Bagian ini HANYA akan tampil jika user belum login --}}
+                    <a href="{{ route('login') }}" style="font-weight: 600; text-decoration: none;">Login</a>
+                @endguest
+            </div>
+        </header>
 
     <div class="container">
         @if (session('success'))
