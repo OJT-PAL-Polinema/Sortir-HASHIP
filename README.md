@@ -1,61 +1,102 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Sortir IP/Hash - Aplikasi Manajemen Blocklist
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sebuah aplikasi web sederhana yang dibangun dengan Laravel untuk mengelola daftar blocklist alamat IP dan nilai Hash. Aplikasi ini memungkinkan pengguna untuk mengunggah file CSV, memvalidasi isinya, menyimpannya ke database tanpa duplikasi, dan menampilkannya dalam daftar publik.
 
-## About Laravel
+---
+## Fitur Utama ✨
+* **Otentikasi Pengguna**: Sistem login untuk administrator yang ingin mengelola data.
+* **Upload File CSV**: Mengunggah daftar IP atau Hash dengan mudah melalui file `.csv` atau `.txt`.
+* **Deduplikasi Otomatis**: Sistem secara otomatis akan menolak data yang sudah ada di dalam database, hanya menyimpan entri yang unik.
+* **Validasi Konten**: Aplikasi akan memeriksa beberapa baris pertama file untuk memastikan isinya sesuai dengan tipe data yang dipilih (IP atau Hash).
+* **Notifikasi Detail**: Setelah upload, sistem akan memberikan laporan jumlah data baru yang ditambahkan dan jumlah duplikat yang ditemukan.
+* **Tampilan Publik**: Siapa pun dapat melihat daftar IP dan Hash yang sudah tersimpan tanpa perlu login.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
+## Teknologi 
+* Laravel
+* PHP
+* MySQL / MariaDB
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
+## Instalasi & Konfigurasi ⚙️
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Berikut adalah langkah-langkah untuk menjalankan aplikasi ini di lingkungan lokal.
 
-## Learning Laravel
+1.  **Clone Repository**
+    ```bash
+    git clone [URL_REPOSITORY_ANDA]
+    cd [NAMA_FOLDER_PROYEK]
+    ```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+2.  **Install Dependencies**
+    Jalankan perintah Composer untuk menginstal semua paket yang dibutuhkan.
+    ```bash
+    composer install
+    ```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+3.  **Buat File Environment**
+    Salin file `.env.example` menjadi `.env`.
+    ```bash
+    copy .env.example .env
+    ```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+4.  **Generate Application Key**
+    Buat kunci enkripsi unik untuk aplikasi Anda.
+    ```bash
+    php artisan key:generate
+    ```
 
-## Laravel Sponsors
+5.  **Konfigurasi Database**
+    Buka file `.env` dan sesuaikan pengaturan database Anda.
+    ```env
+    DB_CONNECTION=mysql
+    DB_HOST=127.0.0.1
+    DB_PORT=3306
+    DB_DATABASE=sortir
+    DB_USERNAME=root
+    DB_PASSWORD=
+    ```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+6.  **Setup Database (Pilih Salah Satu Opsi)**
 
-### Premium Partners
+    #### **Opsi A (Cepat): Import SQL**
+    Cara ini menggunakan file `.sql` yang sudah berisi struktur tabel dan data user admin.
+    1.  Buat database baru di MySQL/phpMyAdmin dengan nama **`sortir`**.
+    2.  Import file **`sortir.sql`** yang sudah disediakan ke dalam database tersebut.
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+    #### **Opsi B (Standar): Migrasi & Seeding**
+    Cara ini membuat struktur tabel dan data awal dari kode Laravel.
+    1.  Buat database baru di MySQL/phpMyAdmin dengan nama **`sortir`**.
+    2.  Jalankan migrasi untuk membuat semua tabel.
+        ```bash
+        php artisan migrate
+        ```
+    3.  Jalankan seeder untuk membuat data user admin.
+        ```bash
+        php artisan db:seed
+        ```
 
-## Contributing
+7.  **Jalankan Aplikasi**
+    Jalankan server development lokal Laravel.
+    ```bash
+    php artisan serve
+    ```
+    Aplikasi sekarang akan berjalan di `http://127.0.0.1:8000`.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
+## Penggunaan 🚀
 
-## Code of Conduct
+Aplikasi ini memiliki dua tingkat akses:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+#### **Sebagai Tamu (Tanpa Login)**
+* Anda dapat langsung mengakses halaman daftar IP dan Hash.
+    * Buka `http://127.0.0.1:8000/ips` untuk melihat daftar IP.
+    * Buka `http://127.0.0.1:8000/hashes` untuk melihat daftar Hash.
 
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+#### **Sebagai Admin (Setelah Login)**
+* Buka halaman login di `http://127.0.0.1:8000/login`.
+* Gunakan kredensial berikut untuk masuk:
+    * **Username**: `admin`
+    * **Password**: `admin`
+* Setelah login, Anda akan diarahkan ke halaman *dashboard* (`/home`).
+* Di halaman ini, Anda dapat menggunakan form untuk mengunggah file CSV yang berisi daftar IP atau Hash baru.
