@@ -19,39 +19,36 @@ Sebuah aplikasi web sederhana yang dibangun dengan Laravel untuk mengelola dafta
 
 ---
 ## Instalasi & Konfigurasi ⚙️
+Ada dua cara untuk menginstal proyek ini, silakan pilih salah satu.
 
-Berikut adalah langkah-langkah untuk menjalankan aplikasi ini di lingkungan lokal.
+---
+#### **Jalur A: Instalasi via `git clone` (Direkomendasikan)**
+Ikuti semua langkah ini dari awal jika Anda meng-clone repositori.
 
 1.  **Clone Repository**
     ```bash
-    git clone https://github.com/OJT-PAL-Polinema/Sortir-HASHIP.git
+    git clone [https://github.com/OJT-PAL-Polinema/Sortir-HASHIP.git](https://github.com/OJT-PAL-Polinema/Sortir-HASHIP.git)
     cd Sortir-HASHIP
     ```
 
 2.  **Install Dependencies**
-    Jalankan perintah Composer untuk menginstal semua paket yang dibutuhkan.
     ```bash
     composer install
     ```
 
 3.  **Buat File Environment**
-    Salin file `.env.example` menjadi `.env`.
     ```bash
     copy .env.example .env
     ```
 
 4.  **Generate Application Key**
-    Buat kunci enkripsi unik untuk aplikasi Anda.
     ```bash
     php artisan key:generate
     ```
 
 5.  **Konfigurasi Database**
-    Buka file `.env` dan sesuaikan pengaturan database Anda.
+    Buka file `.env` dan sesuaikan pengaturan database Anda (nama database, username, password).
     ```env
-    DB_CONNECTION=mysql
-    DB_HOST=127.0.0.1
-    DB_PORT=3306
     DB_DATABASE=sortir
     DB_USERNAME=root
     DB_PASSWORD=
@@ -59,39 +56,48 @@ Berikut adalah langkah-langkah untuk menjalankan aplikasi ini di lingkungan loka
 
 6.  **Setup Database (Pilih Salah Satu Opsi)**
 
-    #### **Opsi A (Cepat): Import SQL**
-    Cara ini menggunakan file `.sql` yang sudah berisi struktur tabel dan data user admin.
-    1.  Buat database baru di MySQL/phpMyAdmin dengan nama **`sortir`**.
-    2.  Import file **`sortir.sql`** yang sudah disediakan ke dalam database tersebut.
+    * **Opsi 1 (Cepat): Import SQL**
+        1.  Buat database baru bernama `sortir`.
+        2.  Import file `sortir.sql` yang sudah disediakan.
 
-    #### **Opsi B (Standar): Migrasi & Seeding**
-    Cara ini membuat struktur tabel dan data awal dari kode Laravel.
-    1.  Buat database baru di MySQL/phpMyAdmin dengan nama **`sortir`**.
-    2.  Jalankan migrasi untuk membuat semua tabel.
-        ```bash
-        php artisan migrate
-        ```
-    3.  Jalankan seeder untuk membuat data user admin.
-        ```bash
-        php artisan db:seed
-        ```
+    * **Opsi 2 (Standar): Migrasi & Seeding**
+        1.  Buat database baru bernama `sortir`.
+        2.  Jalankan `php artisan migrate`
+        3.  Jalankan `php artisan db:seed`
 
 7.  **Jalankan Aplikasi**
-    Jalankan server development lokal Laravel.
     ```bash
     php artisan serve
     ```
-    Aplikasi sekarang akan berjalan di `http://127.0.0.1:8000`.
 
+---
+#### **Jalur B: Instalasi via File ZIP**
+Gunakan jalur ini jika Anda mengunduh proyek dalam bentuk file `.zip`.
+
+1.  **Ekstrak File ZIP**
+    Ekstrak semua isi file `Sortir-HASHIP.zip` ke folder tujuan Anda.
+
+2.  **Lewati Langkah Awal**
+    Anda bisa **melewatkan langkah 1 sampai 5** dari "Jalur A" karena file `.env` dan folder `vendor` sudah disertakan. Langsung lanjutkan ke:
+
+3.  **Setup Database (Langkah 6 dari Jalur A)**
+    Pastikan pengaturan di file `.env` Anda sudah benar, lalu lakukan salah satu dari dua opsi berikut:
+    * **Opsi 1 (Cepat):** Buat database `sortir` dan import file `sortir.sql`.
+    * **Opsi 2 (Standar):** Buat database `sortir`, lalu jalankan `php artisan migrate --seed`.
+
+4.  **Jalankan Aplikasi (Langkah 7 dari Jalur A)**
+    ```bash
+    php artisan serve
+    ```
 ---
 ## Penggunaan 🚀
 
 Aplikasi ini memiliki dua tingkat akses:
 
 #### **Sebagai Tamu (Tanpa Login)**
-* Anda dapat langsung mengakses halaman daftar IP dan Hash.
-    * Buka `http://127.0.0.1:8000/ips` untuk melihat daftar IP.
-    * Buka `http://127.0.0.1:8000/hashes` untuk melihat daftar Hash.
+* Anda dapat langsung mengakses halaman daftar IP dan Hash. Ada dua cara untuk melakukannya:
+    1.  Ketik langsung alamatnya di browser: `http://127.0.0.1:8000/ips` atau `http://127.0.0.1:8000/hashes`.
+    2.  Buka halaman `http://127.0.0.1:8000/login` dan gunakan tombol navigasi **"IP"** atau **"HASH"** di bagian header.
 
 #### **Sebagai Admin (Setelah Login)**
 * Buka halaman login di `http://127.0.0.1:8000/login`.
