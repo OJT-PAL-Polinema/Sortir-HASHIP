@@ -24,8 +24,8 @@ Berikut adalah langkah-langkah untuk menjalankan aplikasi ini di lingkungan loka
 
 1.  **Clone Repository**
     ```bash
-    git clone [URL_REPOSITORY_ANDA]
-    cd [NAMA_FOLDER_PROYEK]
+    git clone https://github.com/OJT-PAL-Polinema/Sortir-HASHIP.git
+    cd Sortir-HASHIP
     ```
 
 2.  **Install Dependencies**
