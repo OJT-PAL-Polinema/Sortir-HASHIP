@@ -177,7 +177,7 @@
                         <form action="{{ route('ips.destroy', $ip) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus ini?');">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="delete-btn">❌</button>
+                            <button type="submit" class="delete-btn">X</button>
                         </form>
                         @endauth
                     </div>
