@@ -71,6 +71,44 @@
             border: 1px solid var(--border-color);
             border-radius: 5px;
             background-color: #f8f9fa;
+            display: flex; /* <-- Tambahkan ini */
+            justify-content: space-between; /* <-- Tambahkan ini */
+            align-items: center; /* <-- Tambahkan ini */
+        }
+        .metadata-value-with-search {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-form-inline {
+            display: flex;
+        }
+
+        .search-form-inline input {
+            width: 150px;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-right: none;
+            border-radius: 5px 0 0 5px;
+        }
+
+        .search-form-inline button {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            background-color: #f8f9fa;
+            color: var(--text-color);
+            border-radius: 0 5px 5px 0;
+            cursor: pointer;
+        }
+        .delete-btn {
+            background-color: #f8f9fa ;
+            color: #dc3545;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
         }
     </style>
 </head>
@@ -118,14 +156,31 @@
                     </tr>
                     <tr>
                         <td>Result Contains</td>
-                        <td>{{ $ipCount }} entries</td>
+                        <td class="metadata-value-with-search">
+                            <span>{{ $ipCount }} entries</span>
+                            @auth
+                            <form action="{{ route('ips.index') }}" method="GET" class="search-form-inline">
+                                <input type="text" name="search" placeholder="Cari..." value="{{ $search ?? '' }}">
+                                <button type="submit">Cari</button>
+                            </form>
+                            @endauth
+                        </td>
                     </tr>
                 </tbody>
             </table>
 
-            <div class="ip-list">
+           <div class="ip-list">
                 @forelse ($ips as $ip)
-                    <div class="ip-item">{{ $ip->ip_address }}</div>
+                    <div class="ip-item">
+                        <span>{{ $ip->ip_address }}</span>
+                        @auth
+                        <form action="{{ route('ips.destroy', $ip) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus ini?');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="delete-btn">❌</button>
+                        </form>
+                        @endauth
+                    </div>
                 @empty
                     <div class="ip-item">Belum ada data IP yang tersimpan.</div>
                 @endforelse

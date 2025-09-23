@@ -33,6 +33,88 @@
         .metadata-table td:last-child { font-weight: 600; }
         .ip-list { display: flex; flex-direction: column; gap: 10px; }
         .ip-item { padding: 15px; border: 1px solid var(--border-color); border-radius: 5px; background-color: #f8f9fa; font-family: monospace; }
+        in Content Styling */
+        .list-card {
+            background-color: var(--card-bg);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            max-width: 600px; /* Atur lebar kartu agar tidak terlalu besar */
+            margin: 40px auto; /* Posisikan di tengah */
+        }
+        .list-card h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        /* Metadata Table Styling */
+        .metadata-table {
+            width: 100%;
+            margin-bottom: 25px;
+            font-size: 15px;
+        }
+        .metadata-table td {
+            padding: 8px 0;
+        }
+        .metadata-table td:first-child {
+            color: #6c757d; /* Warna abu-abu untuk label */
+            width: 120px;
+        }
+        .metadata-table td:last-child {
+            font-weight: 600;
+        }
+
+        /* IP List Styling */
+        .ip-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+         .ip-item {
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            display: flex; /* <-- Tambahkan ini */
+            justify-content: space-between; /* <-- Tambahkan ini */
+            align-items: center; /* <-- Tambahkan ini */
+        }
+        .metadata-value-with-search {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-form-inline {
+            display: flex;
+        }
+
+        .search-form-inline input {
+            width: 150px;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-right: none;
+            border-radius: 5px 0 0 5px;
+        }
+
+        .search-form-inline button {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            background-color: #f8f9fa;
+            color: var(--text-color);
+            border-radius: 0 5px 5px 0;
+            cursor: pointer;
+        }
+        .delete-btn {
+            background-color: #f8f9fa ;
+            color: #dc3545;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
@@ -77,16 +159,32 @@
                             @endif
                         </td>
                     </tr>
-                    <tr>
+                   <tr>
                         <td>Result Contains</td>
-                        <td>{{ $hashCount }} entries</td>
+                        <td class="metadata-value-with-search">
+                            <span>{{ $hashCount }} entries</span>
+                            @auth
+                            <form action="{{ route('hashes.index') }}" method="GET" class="search-form-inline">
+                                <input type="text" name="search" placeholder="Cari..." value="{{ $search ?? '' }}">
+                                <button type="submit">Cari</button>
+                            </form>
+                            @endauth
+                        </td>
                     </tr>
                 </tbody>
             </table>
-
             <div class="ip-list">
                 @forelse ($hashes as $hash)
-                    <div class="ip-item">{{ $hash->hash_value }}</div>
+                    <div class="ip-item">
+                        <span>{{ $hash->hash_value }}</span>
+                        @auth
+                        <form action="{{ route('hashes.destroy', $hash) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus ini?');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="delete-btn">❌</button>
+                        </form>
+                        @endauth
+                    </div>
                 @empty
                     <div class="ip-item">Belum ada data Hash yang tersimpan.</div>
                 @endforelse

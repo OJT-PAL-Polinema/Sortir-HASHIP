@@ -10,22 +10,37 @@ class IpController extends Controller
     /**
      * Menampilkan halaman daftar IP.
      */
-    public function index()
+    // app/Http/Controllers/IpController.php
+
+    public function index(Request $request)
     {
-        // 1. Ambil semua data IP, urutkan dari yang terbaru
-        $ips = IpAddress::latest()->get();
+        $search = $request->input('search');
 
-        // 2. Hitung jumlah total IP
+        // Query dasar
+        $query = IpAddress::query();
+
+        // Jika ada input pencarian, tambahkan kondisi 'where'
+        if ($search) {
+            $query->where('ip_address', 'like', '%' . $search . '%');
+        }
+
+        // Ambil data setelah difilter (atau tidak), urutkan dari yang terbaru
+        $ips = $query->latest()->get();
+
         $ipCount = $ips->count();
-
-        // 3. Cari kapan data terakhir diubah/ditambahkan
         $lastModified = IpAddress::latest('updated_at')->first();
 
-        // 4. Kirim semua data ke view
         return view('ips.index', [
             'ips' => $ips,
             'ipCount' => $ipCount,
-            'lastModified' => $lastModified ? $lastModified->updated_at : null
+            'lastModified' => $lastModified ? $lastModified->updated_at : null,
+            'search' => $search // Kirim kata kunci pencarian kembali ke view
         ]);
+    }
+    
+    public function destroy(IpAddress $ipAddress)
+    {
+        $ipAddress->delete();
+        return redirect()->route('ips.index')->with('success', 'Alamat IP berhasil dihapus.');
     }
 }

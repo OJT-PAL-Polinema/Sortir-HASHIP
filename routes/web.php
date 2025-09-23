@@ -31,4 +31,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/home', [DashboardController::class, 'index'])->name('home');
     Route::post('/upload', [DashboardController::class, 'store'])->name('upload.store');
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
+    Route::delete('/ips/{ipAddress}', [IpController::class, 'destroy'])->name('ips.destroy');
+    Route::delete('/hashes/{hash}', [HashController::class, 'destroy'])->name('hashes.destroy');
 });

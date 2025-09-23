@@ -10,22 +10,34 @@ class HashController extends Controller
     /**
      * Menampilkan halaman daftar Hash.
      */
-    public function index()
+    public function index(Request $request)
     {
-        // 1. Ambil semua data Hash, urutkan dari yang terbaru
-        $hashes = Hash::latest()->get();
+        $search = $request->input('search');
 
-        // 2. Hitung jumlah total Hash
+        // Query dasar
+        $query = Hash::query();
+
+        // Jika ada input pencarian, tambahkan kondisi 'where'
+        if ($search) {
+            $query->where('hash_value', 'like', '%' . $search . '%');
+        }
+
+        $hashes = $query->latest()->get();
+
         $hashCount = $hashes->count();
-
-        // 3. Cari kapan data terakhir diubah/ditambahkan
         $lastModified = Hash::latest('updated_at')->first();
 
-        // 4. Kirim semua data ke view 'hashes.index'
         return view('hashes.index', [
             'hashes' => $hashes,
             'hashCount' => $hashCount,
-            'lastModified' => $lastModified ? $lastModified->updated_at : null
+            'lastModified' => $lastModified ? $lastModified->updated_at : null ,
+            'search' => $search 
         ]);
+    }
+
+    public function destroy(Hash $hash)
+    {
+        $hash->delete();
+        return redirect()->route('hashes.index')->with('success', 'Hash berhasil dihapus.');
     }
 }
